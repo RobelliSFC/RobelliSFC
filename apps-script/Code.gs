@@ -6,8 +6,8 @@
  * Imposta qui sotto gli ID dei fogli (la parte tra /d/ e /edit nell'URL).
  * Se Impostazioni e Letture sono nello stesso file, usa lo stesso ID due volte.
  */
-const ID_IMPOSTAZIONI = 'INCOLLA_QUI_ID_FOGLIO_IMPOSTAZIONI';
-const ID_LETTURE      = 'INCOLLA_QUI_ID_FOGLIO_LETTURE';
+const ID_IMPOSTAZIONI = '11WV2lYM5Qr7FeF2tYGUprkZMUzHbOXX4kV_7Lc2I0pE';
+const ID_LETTURE      = '11WV2lYM5Qr7FeF2tYGUprkZMUzHbOXX4kV_7Lc2I0pE';
 const SCHEDA_IMPOSTAZIONI = 'Impostazioni';
 const SCHEDA_LETTURE      = 'Letture';
 const FUSO = 'Europe/Rome';
