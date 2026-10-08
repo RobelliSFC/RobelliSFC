@@ -11,6 +11,8 @@ const ID_LETTURE      = '11WV2lYM5Qr7FeF2tYGUprkZMUzHbOXX4kV_7Lc2I0pE';
 const SCHEDA_IMPOSTAZIONI = 'Impostazioni';
 const SCHEDA_LETTURE      = 'Letture';
 const FUSO = 'Europe/Rome';
+/* Avviso via mail a ogni lettura salvata. Lascia '' per disattivarlo. */
+const EMAIL_AVVISO = 'stefano.robelli@fincantieri.it';
 
 /* Scheda Impostazioni, riga 1 = intestazioni, dalla riga 2 una nave per riga:
    A Costruzione | B Distanza marche prua-poppa (m) | C Largh. prua (m) | D Largh. centro (m) | E Largh. poppa SKEG (m) | F Largh. poppa TIMONE (m) */
@@ -33,6 +35,43 @@ function num(v){
 function passwordOk(pw){
   const vera = PropertiesService.getScriptProperties().getProperty('PASSWORD');
   return !!vera && pw === vera;
+}
+
+function virgola(n, d){
+  return (n === null || n === undefined || n === '' || !isFinite(n)) ? '—' : Number(n).toFixed(d).replace('.', ',');
+}
+
+/* Una mail per ogni lettura. Se l'invio fallisce, la lettura resta comunque salvata nel foglio. */
+function avvisaPerMail(r, quando){
+  if(!EMAIL_AVVISO) return;
+  try{
+    const m = r.marche;
+    const data = Utilities.formatDate(quando, FUSO, 'dd/MM/yyyy HH:mm');
+    const lato = a => a === null || !isFinite(a) || Math.abs(a) < 0.005 ? '' : (a > 0 ? ' a dritta' : ' a sinistra');
+    const assetto = (r.assetto_m === null || !isFinite(r.assetto_m) || Math.abs(r.assetto_m) < 0.005) ? '' : (r.assetto_m > 0 ? ' (appruato)' : ' (appoppato)');
+    const righe = [
+      'Costruzione ' + r.costruzione + ' · marca di poppa letta su ' + (r.rif_poppa || '—'),
+      'Data: ' + data,
+      '',
+      'Prua   PS ' + virgola(m.fp,2) + '   SB ' + virgola(m.fs,2),
+      'Centro PS ' + virgola(m.mp,2) + '   SB ' + virgola(m.ms,2),
+      'Poppa  PS ' + virgola(m.ap,2) + '   SB ' + virgola(m.as,2),
+      '',
+      'Immersione media: ' + virgola(r.media,3) + ' m',
+      'Densità: ' + virgola(r.densita,3) + ' t/m³',
+      'Sbandamento prua: ' + virgola(Math.abs(r.sbandamento.f),2) + '°' + lato(r.sbandamento.f),
+      'Sbandamento centro: ' + virgola(Math.abs(r.sbandamento.m),2) + '°' + lato(r.sbandamento.m),
+      'Sbandamento poppa: ' + virgola(Math.abs(r.sbandamento.a),2) + '°' + lato(r.sbandamento.a),
+      'Assetto: ' + virgola(Math.abs(r.assetto_gradi),3) + '° / ' + virgola(Math.abs(r.assetto_m),2) + ' m' + assetto
+    ];
+    MailApp.sendEmail({
+      to: EMAIL_AVVISO,
+      subject: 'Immersioni ' + r.costruzione + ' · media ' + virgola(r.media,3) + ' m · ' + data,
+      body: righe.join('\n')
+    });
+  }catch(err){
+    console.error('Mail non inviata: ' + err);
+  }
 }
 
 function risposta(obj){
@@ -80,6 +119,7 @@ function doPost(e){
       r.sbandamento.f, r.sbandamento.m, r.sbandamento.a,
       r.assetto_gradi, r.assetto_m, ora(r.prima_lettura), ora(r.ultima_lettura), r.rid
     ]);
+    avvisaPerMail(r, quando);
     return risposta({ok:true});
   }catch(err){
     return risposta({ok:false,error:String(err)});

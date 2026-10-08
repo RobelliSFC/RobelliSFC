@@ -22,3 +22,8 @@ Il salvataggio è protetto da una password (l'elenco navi invece si legge senza)
 3. Proprietà: `PASSWORD`, Valore: la password scelta > **Salva proprietà script**.
 4. Dopo ogni modifica al codice: **Esegui il deployment > Gestisci deployment > matita > Versione: Nuova versione > Esegui il deployment** (l'URL resta lo stesso).
 Sul telefono l'app la chiede al primo salvataggio e la ricorda.
+
+## Avviso via mail
+Ogni lettura salvata invia una mail all'indirizzo in `EMAIL_AVVISO` (in cima a `Code.gs`; `''` per spegnerlo).
+Dopo aver incollato il codice nuovo Google chiede un'autorizzazione in più (invio mail): **Esegui** una funzione qualsiasi dal menu in alto e consenti, poi ridistribuisci con **Nuova versione**.
+Limite: circa 100 mail al giorno con account Gmail gratuito, 1500 con Workspace.
