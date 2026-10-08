@@ -22,6 +22,13 @@ const INTESTAZIONI = ['Data','Ora','Costruzione','Marca poppa su',
   'Assetto (°)','Assetto (m)','Prima lettura','Ultima lettura','ID'];
 /* Segni: sbandamento > 0 = più immersa SB (a dritta); assetto > 0 = appruato. */
 
+/* accetta numeri veri o testo con la virgola ("300,21") */
+function num(v){
+  if(v === '' || v === null) return null;
+  const n = typeof v === 'number' ? v : parseFloat(String(v).replace(/\s/g,'').replace(',','.'));
+  return isFinite(n) ? n : null;
+}
+
 function risposta(obj){
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -32,7 +39,7 @@ function doGet(e){
     const righe = SpreadsheetApp.openById(ID_IMPOSTAZIONI).getSheetByName(SCHEDA_IMPOSTAZIONI)
       .getDataRange().getValues().slice(1);
     const navi = righe.filter(r => r[0] !== '').map(r => ({
-      id:String(r[0]).trim(), len:Number(r[1]), bf:Number(r[2]), bm:Number(r[3]), ba:Number(r[4]), bt:r[5]===''?null:Number(r[5])
+      id:String(r[0]).trim(), len:num(r[1]), bf:num(r[2]), bm:num(r[3]), ba:num(r[4]), bt:num(r[5])
     }));
     return risposta({ok:true,navi:navi});
   }catch(err){ return risposta({ok:false,error:String(err)}); }
