@@ -36,3 +36,10 @@ function provaMailGmail(){
   MailApp.sendEmail(DESTINATARIO, 'Prova da Gmail', 'Se leggi questa mail, Gmail → Fincantieri funziona.');
   Logger.log('Inviata a ' + DESTINATARIO);
 }
+
+/* Diagnosi: mostra nel log con quale account gira lo script e quante mail può ancora inviare oggi. */
+function diagnosi(){
+  Logger.log('Account: ' + Session.getEffectiveUser().getEmail());
+  Logger.log('Mail ancora inviabili oggi: ' + MailApp.getRemainingDailyQuota());
+  Logger.log('Destinatario impostato: ' + DESTINATARIO);
+}
