@@ -13,7 +13,7 @@ const SCHEDA_LETTURE      = 'Letture';
 const FUSO = 'Europe/Rome';
 
 /* Scheda Impostazioni, riga 1 = intestazioni, dalla riga 2 una nave per riga:
-   A Costruzione | B Distanza marche prua-poppa (m) | C Largh. prua (m) | D Largh. centro (m) | E Largh. poppa (m) */
+   A Costruzione | B Distanza marche prua-poppa (m) | C Largh. prua (m) | D Largh. centro (m) | E Largh. poppa SKEG (m) | F Largh. poppa TIMONE (m) */
 
 const INTESTAZIONI = ['Data','Ora','Costruzione','Marca poppa su',
   'PS prua','SB prua','PS centro','SB centro','PS poppa','SB poppa',
@@ -32,7 +32,7 @@ function doGet(e){
     const righe = SpreadsheetApp.openById(ID_IMPOSTAZIONI).getSheetByName(SCHEDA_IMPOSTAZIONI)
       .getDataRange().getValues().slice(1);
     const navi = righe.filter(r => r[0] !== '').map(r => ({
-      id:String(r[0]).trim(), len:Number(r[1]), bf:Number(r[2]), bm:Number(r[3]), ba:Number(r[4])
+      id:String(r[0]).trim(), len:Number(r[1]), bf:Number(r[2]), bm:Number(r[3]), ba:Number(r[4]), bt:r[5]===''?null:Number(r[5])
     }));
     return risposta({ok:true,navi:navi});
   }catch(err){ return risposta({ok:false,error:String(err)}); }

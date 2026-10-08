@@ -230,10 +230,10 @@ const STORE='immersioni-v1';
 /* URL dell'app web Google Apps Script (vedi apps-script/LEGGIMI.md). Vuoto = modalità prova. */
 const SHEET_URL='';
 const DEMO_SHIPS=[
-  {id:'6302',len:200,bf:20,bm:30,ba:30},
-  {id:'6303',len:200,bf:20,bm:30,ba:30},
-  {id:'6371',len:215,bf:22,bm:32,ba:32},
-  {id:'6378',len:215,bf:22,bm:32,ba:32}
+  {id:'6302',len:200,bf:20,bm:30,ba:30,bt:12},
+  {id:'6303',len:200,bf:20,bm:30,ba:30,bt:12},
+  {id:'6371',len:215,bf:22,bm:32,ba:32,bt:14},
+  {id:'6378',len:215,bf:22,bm:32,ba:32,bt:14}
 ];
 const $=id=>document.getElementById(id);
 let state={};
@@ -327,14 +327,15 @@ function update(){
 }
 
 /* ---- navi dal foglio (scheda Impostazioni) ---- */
+/* larghezza di poppa: skeg (colonna E) o timone (colonna F) a seconda del riferimento scelto */
 function applyShip(id){
   const sh=state.ships.find(x=>x.id===id);
   state.ship=sh?sh.id:'';
-  const g=sh||{};
-  state.g.bf=sh?String(g.bf).replace('.',','):'';state.g.bm=sh?String(g.bm).replace('.',','):'';
-  state.g.ba=sh?String(g.ba).replace('.',','):'';state.g.len=sh?String(g.len).replace('.',','):'';
+  const c=v=>isFinite(v)?String(v).replace('.',','):'';
+  const bAft=sh?(state.ref==='Timone'&&isFinite(sh.bt)?sh.bt:sh.ba):NaN;
+  state.g.bf=sh?c(sh.bf):'';state.g.bm=sh?c(sh.bm):'';state.g.ba=c(bAft);state.g.len=sh?c(sh.len):'';
   ['bf','bm','ba','len'].forEach(k=>$(k).value=state.g[k]);
-  $('shipinfo').textContent=sh?`Distanza marche ${fmt(g.len,1)} m · larghezze ${fmt(g.bf,1)} / ${fmt(g.bm,1)} / ${fmt(g.ba,1)} m`:'Scegli la nave su cui stai leggendo.';
+  $('shipinfo').textContent=sh?`Distanza marche ${fmt(sh.len,1)} m · larghezze ${fmt(sh.bf,1)} / ${fmt(sh.bm,1)} / ${fmt(bAft,1)} m (poppa ${state.ref==='Timone'?'timone':'skeg'})`:'Scegli la nave su cui stai leggendo.';
   save();update();
 }
 function fillShips(){
@@ -360,7 +361,7 @@ async function loadShips(){
 }
 $('ship').addEventListener('change',e=>applyShip(e.target.value));
 $('ref').value=state.ref||'';
-$('ref').addEventListener('change',e=>{state.ref=e.target.value;save();update()});
+$('ref').addEventListener('change',e=>{state.ref=e.target.value;applyShip(state.ship)});
 
 /* ---- salvataggio ---- */
 const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
