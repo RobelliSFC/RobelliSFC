@@ -13,6 +13,10 @@ const SCHEDA_LETTURE      = 'Letture';
 const FUSO = 'Europe/Rome';
 /* Avviso via mail a ogni lettura salvata. Lascia '' per disattivarlo. */
 const EMAIL_AVVISO = 'stefano.robelli@fincantieri.it';
+/* Se il tuo account Google ha un indirizzo aziendale, la posta in uscita viene rifiutata (DMARC).
+   In quel caso incolla qui l'URL /exec del secondo script (MailGmail.gs, account Gmail): sarà lui a spedire.
+   Con '' lo script spedisce direttamente da questo account. La parola segreta va in Proprietà script: MAIL_SEGRETO. */
+const MAIL_RELAY_URL = '';
 
 /* Scheda Impostazioni, riga 1 = intestazioni, dalla riga 2 una nave per riga:
    A Costruzione | B Distanza marche prua-poppa (m) | C Largh. prua (m) | D Largh. centro (m) | E Largh. poppa SKEG (m) | F Largh. poppa TIMONE (m) */

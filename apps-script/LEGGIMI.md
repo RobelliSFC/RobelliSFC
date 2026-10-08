@@ -27,3 +27,11 @@ Sul telefono l'app la chiede al primo salvataggio e la ricorda.
 Ogni lettura salvata invia una mail all'indirizzo in `EMAIL_AVVISO` (in cima a `Code.gs`; `''` per spegnerlo).
 Dopo aver incollato il codice nuovo Google chiede un'autorizzazione in più (invio mail): **Esegui** una funzione qualsiasi dal menu in alto e consenti, poi ridistribuisci con **Nuova versione**.
 Limite: circa 100 mail al giorno con account Gmail gratuito, 1500 con Workspace.
+
+## Mail rifiutata (DMARC): invio tramite un account Gmail
+Se il tuo account Google usa un indirizzo aziendale, le mail dello script vengono rifiutate («does not pass DMARC verification»).
+Soluzione: un secondo script, sull'account **Gmail**, spedisce al posto del primo.
+1. Accedi a Gmail (finestra in incognito), vai su script.google.com → Nuovo progetto, incolla `MailGmail.gs`.
+2. Impostazioni progetto → Proprietà script → `SEGRETO` = una parola a tua scelta.
+3. Esegui `provaMailGmail` (autorizza). Poi Esegui il deployment → Nuovo deployment → App web → Esegui come Me, Accesso Chiunque. Copia l'URL `/exec`.
+4. Nel primo script: incolla l'URL in `MAIL_RELAY_URL`, aggiungi la proprietà script `MAIL_SEGRETO` con la stessa parola, esegui `provaMail` (autorizza l'accesso a servizi esterni), ridistribuisci con «Nuova versione».
