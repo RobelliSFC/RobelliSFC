@@ -92,6 +92,35 @@ details[open] summary::after{transform:rotate(45deg)}
 details .row{padding-top:8px}
 .hint{grid-column:1/-1;margin:0;font-size:.75rem;color:var(--ink-dim)}
 
+/* ---- riferimento marca poppa ---- */
+.f-ref{position:absolute;left:34.5%;width:31%;top:79%;transform:translateY(-50%);z-index:1}
+.f-ref label{display:block;font-size:.6875rem;color:var(--ink-dim);margin:0 0 3px;text-align:center;letter-spacing:.04em}
+.f-ref select{
+  appearance:none;-webkit-appearance:none;width:100%;height:46px;padding:0 4px;text-align:center;text-align-last:center;
+  font:600 .875rem system-ui,sans-serif;color:var(--ink);background:rgb(6,18,47);
+  border:1px solid var(--panel-line);border-radius:12px;outline:none;
+  transition:border-color .15s var(--ease),box-shadow .15s var(--ease);
+}
+.f-ref select:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(98,180,255,.25)}
+.f-ref.done select{border-color:rgba(95,212,163,.55)}
+
+/* ---- costruzione ---- */
+.ship{display:grid;gap:6px}
+.ship span{font-size:.75rem;color:var(--ink-dim);letter-spacing:.04em}
+.select{position:relative}
+.select::after{content:"";position:absolute;right:16px;top:50%;width:8px;height:8px;margin-top:-6px;border:solid var(--sky);border-width:0 2px 2px 0;transform:rotate(45deg);pointer-events:none}
+.select select{
+  appearance:none;-webkit-appearance:none;width:100%;height:52px;padding:0 40px 0 14px;
+  font:600 1.125rem ui-monospace,Menlo,monospace;color:var(--ink);
+  background:rgba(3,10,30,.55);border:1px solid var(--panel-line);border-radius:12px;outline:none;
+  transition:border-color .15s var(--ease),box-shadow .15s var(--ease);
+}
+.select select:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(98,180,255,.25)}
+.select select option{background:#0a1d4a;color:var(--ink)}
+.ship small{color:var(--ink-dim);font-size:.75rem}
+.num input[readonly]{color:var(--sky);background:rgba(3,10,30,.3)}
+.badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;font-size:.6875rem;color:var(--warn);border:1px solid rgba(255,196,107,.4)}
+
 /* ---- risultati ---- */
 .hero{display:flex;align-items:baseline;gap:8px;margin-bottom:14px}
 .hero b{font-size:2.5rem;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
@@ -130,6 +159,14 @@ button.danger.armed{background:#7a1f2d;border-color:transparent}
     <div class="progress" id="progress">0/7</div>
   </header>
 
+  <section class="card">
+    <label class="ship">
+      <span>Numero di costruzione <b class="badge" id="demo" hidden>prova</b></span>
+      <div class="select"><select id="ship"><option value="">Seleziona…</option></select></div>
+      <small id="shipinfo">Caricamento navi…</small>
+    </label>
+  </section>
+
   <section class="card" aria-label="Marche di immersione">
     <h2>Marche · vista dall'alto</h2>
     <div class="plan" id="plan">
@@ -154,6 +191,7 @@ button.danger.armed{background:#7a1f2d;border-color:transparent}
       <div class="field f-ms" data-k="ms"><label for="ms">SB · centro</label><input id="ms" inputmode="decimal" autocomplete="off" placeholder="0,00"><time></time></div>
       <div class="field f-ap" data-k="ap"><label for="ap">PS · poppa</label><input id="ap" inputmode="decimal" autocomplete="off" placeholder="0,00"><time></time></div>
       <div class="field f-as" data-k="as"><label for="as">SB · poppa</label><input id="as" inputmode="decimal" autocomplete="off" placeholder="0,00"><time></time></div>
+      <div class="f-ref" id="refbox"><label for="ref">Marca letta su</label><select id="ref"><option value="">—</option><option value="Skeg">Skeg</option><option value="Timone">Timone</option></select></div>
     </div>
   </section>
 
@@ -164,11 +202,11 @@ button.danger.armed{background:#7a1f2d;border-color:transparent}
     <details>
       <summary>Dati geometrici nave</summary>
       <div class="row">
-        <label class="num"><span>Larghezza prua (m)</span><input id="bf" inputmode="decimal" placeholder="es. 20,0"></label>
-        <label class="num"><span>Larghezza centro (m)</span><input id="bm" inputmode="decimal" placeholder="es. 30,0"></label>
-        <label class="num"><span>Larghezza poppa (m)</span><input id="ba" inputmode="decimal" placeholder="es. 30,0"></label>
-        <label class="num"><span>Distanza marche prua–poppa (m)</span><input id="len" inputmode="decimal" placeholder="es. 200,0"></label>
-        <p class="hint">Distanze tra le marche PS/SB di ogni sezione e tra le marche di prua e poppa: servono per trasformare le differenze in angoli.</p>
+        <label class="num"><span>Larghezza prua (m)</span><input id="bf" inputmode="decimal" readonly placeholder="—"></label>
+        <label class="num"><span>Larghezza centro (m)</span><input id="bm" inputmode="decimal" readonly placeholder="—"></label>
+        <label class="num"><span>Larghezza poppa (m)</span><input id="ba" inputmode="decimal" readonly placeholder="—"></label>
+        <label class="num"><span>Distanza marche prua–poppa (m)</span><input id="len" inputmode="decimal" readonly placeholder="—"></label>
+        <p class="hint">Letti dalla scheda Impostazioni del foglio per la costruzione scelta. Per cambiarli modifica il foglio.</p>
       </div>
     </details>
   </section>
@@ -189,10 +227,18 @@ button.danger.armed{background:#7a1f2d;border-color:transparent}
 <script>
 const KEYS=['fp','fs','mp','ms','ap','as'];
 const STORE='immersioni-v1';
+/* URL dell'app web Google Apps Script (vedi apps-script/LEGGIMI.md). Vuoto = modalità prova. */
+const SHEET_URL='';
+const DEMO_SHIPS=[
+  {id:'6302',len:200,bf:20,bm:30,ba:30},
+  {id:'6303',len:200,bf:20,bm:30,ba:30},
+  {id:'6371',len:215,bf:22,bm:32,ba:32},
+  {id:'6378',len:215,bf:22,bm:32,ba:32}
+];
 const $=id=>document.getElementById(id);
 let state={};
 try{state=JSON.parse(localStorage.getItem(STORE))||{}}catch(e){}
-state.v=state.v||{};state.t=state.t||{};state.g=state.g||{};
+state.v=state.v||{};state.t=state.t||{};state.g=state.g||{};state.queue=state.queue||[];state.log=state.log||[];state.ships=state.ships||[];
 
 const num=s=>{if(s==null||s==='')return NaN;const n=parseFloat(String(s).replace(',','.'));return isFinite(n)?n:NaN};
 const fmt=(n,d=2)=>isFinite(n)?n.toFixed(d).replace('.',','):'—';
@@ -227,9 +273,9 @@ KEYS.forEach(k=>{
     save();update();
   });
 });
-[['dens','dens'],['bf','bf'],['bm','bm'],['ba','ba'],['len','len']].forEach(([id,key])=>{
-  const el=$(id);if(state.g[key]!=null)el.value=state.g[key];
-  el.addEventListener('input',()=>{state.g[key]=el.value.trim();save();update()});
+['dens','bf','bm','ba','len'].forEach(key=>{
+  const el=$(key);if(state.g[key]!=null)el.value=state.g[key];
+  if(key==='dens')el.addEventListener('input',()=>{state.g[key]=el.value.trim();save();update()});
 });
 if(!$('dens').value){$('dens').value='1,025';state.g.dens='1,025'}
 
@@ -241,21 +287,29 @@ function section(p,s,B){
 }
 const dirHeel=a=>!isFinite(a)||Math.abs(a)<0.005?'':a>0?'a dritta':'a sinistra';
 
-function update(){
+function calc(){
   const v=Object.fromEntries(KEYS.map(k=>[k,num(state.v[k])]));
-  const filled=KEYS.filter(k=>isFinite(v[k])).length+(isFinite(num($('dens').value))?1:0);
+  const all=KEYS.filter(k=>isFinite(v[k]));
+  const mean=all.length?all.reduce((a,k)=>a+v[k],0)/all.length:NaN;
+  const B={f:num(state.g.bf),m:num(state.g.bm),a:num(state.g.ba)},len=num(state.g.len);
+  const sec={f:section(v.fp,v.fs,B.f),m:section(v.mp,v.ms,B.m),a:section(v.ap,v.as,B.a)};
+  let trim=NaN,trimAng=NaN;
+  if(sec.f&&sec.a){trim=sec.f.mean-sec.a.mean;if(isFinite(len)&&len>0)trimAng=deg(Math.atan(trim/len))}
+  return {v,count:all.length,mean,sec,trim,trimAng};
+}
+
+function update(){
+  const c=calc(),{sec}=c;
+  const filled=c.count+(isFinite(num($('dens').value))?1:0);
   $('progress').textContent=filled+'/7';
   KEYS.forEach(k=>{
     const box=$(k).closest('.field');
     box.classList.toggle('done',!!state.t[k]);
     box.querySelector('time').textContent=state.t[k]?hhmm(state.t[k]):'';
   });
+  $('refbox').classList.toggle('done',!!state.ref);
+  $('mean').textContent=c.count?fmt(c.mean,3):'—';
 
-  const all=KEYS.filter(k=>isFinite(v[k]));
-  $('mean').textContent=all.length?fmt(all.reduce((a,k)=>a+v[k],0)/all.length,3):'—';
-
-  const B={f:num(state.g.bf),m:num(state.g.bm),a:num(state.g.ba)},len=num(state.g.len);
-  const sec={f:section(v.fp,v.fs,B.f),m:section(v.mp,v.ms,B.m),a:section(v.ap,v.as,B.a)};
   const rows=[];
   [['f','Prua'],['m','Centro'],['a','Poppa']].forEach(([k,n])=>{
     const s=sec[k];
@@ -264,28 +318,105 @@ function update(){
     rows.push([`Sbandamento ${n}`,val,dirHeel(isFinite(s.angle)?s.angle:s.diff),false,`media ${fmt(s.mean,3)} m · SB−PS ${fmt(s.diff)} m`]);
   });
   if(sec.f&&sec.a){
-    const trim=sec.f.mean-sec.a.mean;
-    const ang=isFinite(len)&&len>0?deg(Math.atan(trim/len)):NaN;
-    const where=Math.abs(trim)<0.005?'':trim>0?'appruato':'appoppato';
-    rows.push(['Assetto longitudinale',isFinite(ang)?`${fmt(Math.abs(ang),3)}°`:`Δ ${fmt(Math.abs(trim))} m`,where,false,`prua ${fmt(sec.f.mean,3)} − poppa ${fmt(sec.a.mean,3)} = ${fmt(trim)} m`]);
+    const where=Math.abs(c.trim)<0.005?'':c.trim>0?'appruato':'appoppato';
+    rows.push(['Assetto longitudinale',isFinite(c.trimAng)?`${fmt(Math.abs(c.trimAng),3)}°`:`Δ ${fmt(Math.abs(c.trim))} m`,where,false,`prua ${fmt(sec.f.mean,3)} − poppa ${fmt(sec.a.mean,3)} = ${fmt(c.trim)} m`]);
   }else rows.push(['Assetto longitudinale','—','',true]);
 
   $('metrics').innerHTML=rows.map(([t,val,d,na,sub])=>
     `<div class="m ${na?'na':'reveal'}"><div><span>${t}</span>${sub?`<small>${sub}</small>`:''}</div><strong>${val}${d?`<span class="dir">${d}</span>`:''}</strong></div>`).join('');
 }
 
-/* azioni */
+/* ---- navi dal foglio (scheda Impostazioni) ---- */
+function applyShip(id){
+  const sh=state.ships.find(x=>x.id===id);
+  state.ship=sh?sh.id:'';
+  const g=sh||{};
+  state.g.bf=sh?String(g.bf).replace('.',','):'';state.g.bm=sh?String(g.bm).replace('.',','):'';
+  state.g.ba=sh?String(g.ba).replace('.',','):'';state.g.len=sh?String(g.len).replace('.',','):'';
+  ['bf','bm','ba','len'].forEach(k=>$(k).value=state.g[k]);
+  $('shipinfo').textContent=sh?`Distanza marche ${fmt(g.len,1)} m · larghezze ${fmt(g.bf,1)} / ${fmt(g.bm,1)} / ${fmt(g.ba,1)} m`:'Scegli la nave su cui stai leggendo.';
+  save();update();
+}
+function fillShips(){
+  const sel=$('ship');
+  sel.innerHTML='<option value="">Seleziona…</option>'+state.ships.map(x=>`<option value="${x.id}">${x.id}</option>`).join('');
+  sel.value=state.ship||'';
+  applyShip(sel.value);
+}
+async function loadShips(){
+  if(!SHEET_URL){
+    $('demo').hidden=false;state.ships=DEMO_SHIPS;fillShips();return;
+  }
+  try{
+    const r=await fetch(SHEET_URL+'?action=navi',{cache:'no-store'});
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.error||'risposta non valida');
+    state.ships=j.navi;save();
+  }catch(e){
+    $('shipinfo').textContent=state.ships.length?'Offline: uso l\'ultimo elenco navi scaricato.':'Impossibile leggere le navi dal foglio.';
+    if(!state.ships.length)return;
+  }
+  fillShips();
+}
+$('ship').addEventListener('change',e=>applyShip(e.target.value));
+$('ref').value=state.ref||'';
+$('ref').addEventListener('change',e=>{state.ref=e.target.value;save();update()});
+
+/* ---- salvataggio ---- */
+const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const tsr=k=>state.t[k]||null;
+async function flush(){
+  if(!SHEET_URL||!state.queue.length||flush.busy)return;
+  flush.busy=true;
+  try{
+    while(state.queue.length){
+      const rec=state.queue[0];
+      const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'salva',record:rec})});
+      const j=await r.json();
+      if(!j.ok)throw new Error(j.error||'errore foglio');
+      state.queue.shift();save();
+    }
+    setStatus('Salvato su foglio ✓ '+hhmm(Date.now()));
+  }catch(e){
+    setStatus(`${state.queue.length} lettura/e in attesa: invio appena c'è connessione.`);
+  }finally{flush.busy=false}
+}
+const setStatus=t=>$('status').textContent=t;
+
 $('save').addEventListener('click',()=>{
-  $('status').textContent='Collegamento a Google Sheet: da configurare nel passo successivo.';
+  const c=calc();
+  if(!state.ship){setStatus('Scegli prima il numero di costruzione.');$('ship').focus();return}
+  if(!state.ref){setStatus('Indica se la marca di poppa è letta su skeg o timone.');$('ref').focus();return}
+  if(c.count<6){setStatus(`Mancano ${6-c.count} marche: completa le letture prima di salvare.`);return}
+  const times=Object.values(state.t);
+  const rec={
+    rid:rid(),ts:Date.now(),costruzione:state.ship,rif_poppa:state.ref,
+    marche:Object.fromEntries(KEYS.map(k=>[k,c.v[k]])),
+    densita:num($('dens').value)||null,
+    media:c.mean,
+    sbandamento:{f:c.sec.f.angle,m:c.sec.m.angle,a:c.sec.a.angle},
+    assetto_gradi:c.trimAng,assetto_m:c.trim,
+    prima_lettura:times.length?Math.min(...times):null,ultima_lettura:times.length?Math.max(...times):null
+  };
+  state.queue.push(rec);state.log.push(rec);
+  state.v={};state.t={};state.ref='';$('ref').value='';save();KEYS.forEach(k=>$(k).value='');update();
+  if(SHEET_URL){setStatus('Salvataggio in corso…');flush()}
+  else setStatus(`Modalità prova: record ${state.ship} salvato solo su questo telefono (${state.log.length}).`);
+  if(!SHEET_URL){state.queue=[];save()}
 });
+
+/* azioni */
 let armed=0;
 $('reset').addEventListener('click',e=>{
   const b=e.currentTarget;
   if(!armed){armed=setTimeout(()=>{armed=0;b.classList.remove('armed');b.textContent='Nuova lettura'},3000);b.classList.add('armed');b.textContent='Tocca ancora per cancellare';return}
   clearTimeout(armed);armed=0;b.classList.remove('armed');b.textContent='Nuova lettura';
-  state.v={};state.t={};save();KEYS.forEach(k=>$(k).value='');update();
+  state.v={};state.t={};state.ref='';$('ref').value='';save();KEYS.forEach(k=>$(k).value='');update();
 });
 update();
+loadShips();
+flush();
+addEventListener('online',flush);
 </script>
 </body>
 </html>
