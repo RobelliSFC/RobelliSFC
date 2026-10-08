@@ -368,27 +368,38 @@ const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const tsr=k=>state.t[k]||null;
 async function flush(){
   if(!SHEET_URL||!state.queue.length||flush.busy)return;
+  if(!state.pw){setStatus('Lettura in attesa: tocca «Salva su foglio» e inserisci la password.');return}
   flush.busy=true;
   try{
     while(state.queue.length){
       const rec=state.queue[0];
-      const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'salva',record:rec})});
+      const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'salva',pw:state.pw,record:rec})});
       const j=await r.json();
-      if(!j.ok)throw new Error(j.error||'errore foglio');
+      if(!j.ok){const e=new Error(j.error||'errore foglio');e.server=true;throw e}
       state.queue.shift();save();
     }
     setStatus('Salvato su foglio ✓ '+hhmm(Date.now()));
   }catch(e){
-    setStatus(`${state.queue.length} lettura/e in attesa: invio appena c'è connessione.`);
+    if(e.message==='password errata'){state.pw='';save();setStatus('Password errata. Tocca «Salva su foglio» per riprovare: la lettura è conservata.')}
+    else if(e.server)setStatus(`Errore del foglio: ${e.message}. La lettura è conservata sul telefono.`);
+    else setStatus(`${state.queue.length} lettura/e in attesa: invio appena c'è connessione.`);
   }finally{flush.busy=false}
+}
+function ensurePw(){
+  if(state.pw)return true;
+  const p=prompt('Password per salvare sul foglio:');
+  if(!p||!p.trim()){setStatus('Salvataggio annullato: serve la password.');return false}
+  state.pw=p.trim();save();return true;
 }
 const setStatus=t=>$('status').textContent=t;
 
 $('save').addEventListener('click',()=>{
   const c=calc();
+  if(!c.count&&state.queue.length){if(ensurePw()){setStatus('Invio in corso…');flush()}return}
   if(!state.ship){setStatus('Scegli prima il numero di costruzione.');$('ship').focus();return}
   if(!state.ref){setStatus('Indica se la marca di poppa è letta su skeg o timone.');$('ref').focus();return}
   if(c.count<6){setStatus(`Mancano ${6-c.count} marche: completa le letture prima di salvare.`);return}
+  if(SHEET_URL&&!ensurePw())return;
   const times=Object.values(state.t);
   const rec={
     rid:rid(),ts:Date.now(),costruzione:state.ship,rif_poppa:state.ref,

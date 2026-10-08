@@ -29,6 +29,12 @@ function num(v){
   return isFinite(n) ? n : null;
 }
 
+/* La password non sta nel codice: si imposta in Impostazioni progetto > Proprietà script (nome: PASSWORD). */
+function passwordOk(pw){
+  const vera = PropertiesService.getScriptProperties().getProperty('PASSWORD');
+  return !!vera && pw === vera;
+}
+
 function risposta(obj){
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -50,6 +56,7 @@ function doPost(e){
   try{
     lock.waitLock(20000);
     const body = JSON.parse(e.postData.contents);
+    if(!passwordOk(body.pw)) return risposta({ok:false,error:'password errata'});
     if(body.action !== 'salva') return risposta({ok:false,error:'azione sconosciuta'});
     const r = body.record;
     let sh = SpreadsheetApp.openById(ID_LETTURE).getSheetByName(SCHEDA_LETTURE);

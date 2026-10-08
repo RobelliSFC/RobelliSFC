@@ -14,3 +14,11 @@ Nota: chiunque conosca l'URL può leggere l'elenco navi e aggiungere righe. Per 
 1. Di solito è colpa di più account Google aperti nello stesso browser. Apri una **finestra in incognito**, accedi **solo** con l'account del foglio e riprova.
 2. Oppure vai direttamente su https://script.google.com con quell'account > **Nuovo progetto** e incolla `Code.gs`: lo script funziona anche non collegato al foglio, perché apre i fogli tramite gli ID.
 3. Se anche così non si apre, l'account (Workspace aziendale) potrebbe avere Apps Script disabilitato dall'amministratore.
+
+## Password
+Il salvataggio è protetto da una password (l'elenco navi invece si legge senza).
+1. Nell'editor Apps Script clicca l'ingranaggio **Impostazioni progetto** (a sinistra).
+2. In fondo, sezione **Proprietà script** > **Aggiungi proprietà script**.
+3. Proprietà: `PASSWORD`, Valore: la password scelta > **Salva proprietà script**.
+4. Dopo ogni modifica al codice: **Esegui il deployment > Gestisci deployment > matita > Versione: Nuova versione > Esegui il deployment** (l'URL resta lo stesso).
+Sul telefono l'app la chiede al primo salvataggio e la ricorda.
