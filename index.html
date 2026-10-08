@@ -371,15 +371,17 @@ async function flush(){
   if(!SHEET_URL||!state.queue.length||flush.busy)return;
   if(!state.pw){setStatus('Lettura in attesa: tocca «Salva su foglio» e inserisci la password.');return}
   flush.busy=true;
+  let mailErr='';
   try{
     while(state.queue.length){
       const rec=state.queue[0];
       const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'salva',pw:state.pw,record:rec})});
       const j=await r.json();
       if(!j.ok){const e=new Error(j.error||'errore foglio');e.server=true;throw e}
+      mailErr=j.mail||mailErr;
       state.queue.shift();save();
     }
-    setStatus('Salvato su foglio ✓ '+hhmm(Date.now()));
+    setStatus('Salvato su foglio ✓ '+hhmm(Date.now())+(mailErr?` · mail non inviata: ${mailErr}`:''));
   }catch(e){
     if(e.message==='password errata'){state.pw='';save();setStatus('Password errata. Tocca «Salva su foglio» per riprovare: la lettura è conservata.')}
     else if(e.server)setStatus(`Errore del foglio: ${e.message}. La lettura è conservata sul telefono.`);

@@ -41,9 +41,10 @@ function virgola(n, d){
   return (n === null || n === undefined || n === '' || !isFinite(n)) ? '—' : Number(n).toFixed(d).replace('.', ',');
 }
 
-/* Una mail per ogni lettura. Se l'invio fallisce, la lettura resta comunque salvata nel foglio. */
+/* Una mail per ogni lettura. Se l'invio fallisce la lettura resta comunque nel foglio;
+   la funzione restituisce '' se tutto ok, altrimenti il testo dell'errore (mostrato sul telefono). */
 function avvisaPerMail(r, quando){
-  if(!EMAIL_AVVISO) return;
+  if(!EMAIL_AVVISO) return 'avviso mail disattivato';
   try{
     const m = r.marche;
     const data = Utilities.formatDate(quando, FUSO, 'dd/MM/yyyy HH:mm');
@@ -69,9 +70,18 @@ function avvisaPerMail(r, quando){
       subject: 'Immersioni ' + r.costruzione + ' · media ' + virgola(r.media,3) + ' m · ' + data,
       body: righe.join('\n')
     });
+    return '';
   }catch(err){
     console.error('Mail non inviata: ' + err);
+    return String(err).slice(0, 160);
   }
+}
+
+/* Da lanciare a mano dall'editor (menu funzioni → provaMail → Esegui): chiede l'autorizzazione e invia una mail di prova. */
+function provaMail(){
+  MailApp.sendEmail(EMAIL_AVVISO, 'Prova avviso Letture immersioni',
+    'Se leggi questa mail l\'invio funziona. Mail ancora inviabili oggi: ' + MailApp.getRemainingDailyQuota());
+  Logger.log('Mail di prova inviata a ' + EMAIL_AVVISO);
 }
 
 function risposta(obj){
@@ -119,8 +129,8 @@ function doPost(e){
       r.sbandamento.f, r.sbandamento.m, r.sbandamento.a,
       r.assetto_gradi, r.assetto_m, ora(r.prima_lettura), ora(r.ultima_lettura), r.rid
     ]);
-    avvisaPerMail(r, quando);
-    return risposta({ok:true});
+    const errMail = avvisaPerMail(r, quando);
+    return risposta({ok:true, mail:errMail});
   }catch(err){
     return risposta({ok:false,error:String(err)});
   }finally{
