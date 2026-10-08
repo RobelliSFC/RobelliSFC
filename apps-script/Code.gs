@@ -41,6 +41,26 @@ function virgola(n, d){
   return (n === null || n === undefined || n === '' || !isFinite(n)) ? '—' : Number(n).toFixed(d).replace('.', ',');
 }
 
+/* Spedisce direttamente (MailApp) oppure tramite il secondo script su Gmail. Restituisce '' se ok, altrimenti l'errore. */
+function inviaMail(oggetto, testo){
+  try{
+    if(MAIL_RELAY_URL){
+      const segreto = PropertiesService.getScriptProperties().getProperty('MAIL_SEGRETO');
+      const res = UrlFetchApp.fetch(MAIL_RELAY_URL, {
+        method: 'post', contentType: 'text/plain', followRedirects: true, muteHttpExceptions: true,
+        payload: JSON.stringify({segreto: segreto, oggetto: oggetto, testo: testo})
+      });
+      const j = JSON.parse(res.getContentText());
+      return j.ok ? '' : String(j.error || 'errore sconosciuto').slice(0, 160);
+    }
+    MailApp.sendEmail({to: EMAIL_AVVISO, subject: oggetto, body: testo});
+    return '';
+  }catch(err){
+    console.error('Mail non inviata: ' + err);
+    return String(err).slice(0, 160);
+  }
+}
+
 /* Una mail per ogni lettura. Se l'invio fallisce la lettura resta comunque nel foglio;
    la funzione restituisce '' se tutto ok, altrimenti il testo dell'errore (mostrato sul telefono). */
 function avvisaPerMail(r, quando){
@@ -65,12 +85,7 @@ function avvisaPerMail(r, quando){
       'Sbandamento poppa: ' + virgola(Math.abs(r.sbandamento.a),2) + '°' + lato(r.sbandamento.a),
       'Assetto: ' + virgola(Math.abs(r.assetto_gradi),3) + '° / ' + virgola(Math.abs(r.assetto_m),2) + ' m' + assetto
     ];
-    MailApp.sendEmail({
-      to: EMAIL_AVVISO,
-      subject: 'Immersioni ' + r.costruzione + ' · media ' + virgola(r.media,3) + ' m · ' + data,
-      body: righe.join('\n')
-    });
-    return '';
+    return inviaMail('Immersioni ' + r.costruzione + ' · media ' + virgola(r.media,3) + ' m · ' + data, righe.join('\n'));
   }catch(err){
     console.error('Mail non inviata: ' + err);
     return String(err).slice(0, 160);
@@ -79,9 +94,8 @@ function avvisaPerMail(r, quando){
 
 /* Da lanciare a mano dall'editor (menu funzioni → provaMail → Esegui): chiede l'autorizzazione e invia una mail di prova. */
 function provaMail(){
-  MailApp.sendEmail(EMAIL_AVVISO, 'Prova avviso Letture immersioni',
-    'Se leggi questa mail l\'invio funziona. Mail ancora inviabili oggi: ' + MailApp.getRemainingDailyQuota());
-  Logger.log('Mail di prova inviata a ' + EMAIL_AVVISO);
+  const err = inviaMail('Prova avviso Letture immersioni', 'Se leggi questa mail l\'invio funziona.');
+  Logger.log(err ? 'ERRORE: ' + err : 'Mail di prova inviata (' + (MAIL_RELAY_URL ? 'tramite Gmail' : 'diretta') + ')');
 }
 
 function risposta(obj){
